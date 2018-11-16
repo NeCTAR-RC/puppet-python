@@ -186,31 +186,34 @@ class python::install {
         }
       }
 
-      if $::osfamily == 'RedHat' {
-        if $pip_ensure != 'absent' {
-          if $python::use_epel == true {
-            include 'epel'
-            Class['epel'] -> Package['pip']
+      case $facts['os']['family'] {
+        'RedHat': {
+          if $pip_ensure != 'absent' {
+            if $python::use_epel == true {
+              include 'epel'
+              Class['epel'] -> Package['pip']
+            }
           }
-        }
-        if ($venv_ensure != 'absent') and ($::operatingsystemrelease =~ /^6/) {
-          if $python::use_epel == true {
-            include 'epel'
-            Class['epel'] -> Package['virtualenv']
+          if ($venv_ensure != 'absent') and ($::operatingsystemrelease =~ /^6/) {
+            if $python::use_epel == true {
+              include 'epel'
+              Class['epel'] -> Package['virtualenv']
+            }
           }
-        }
 
-        $virtualenv_package = "${python}-virtualenv"
-      } else {
-        if $::lsbdistcodename == 'jessie' {
+          $virtualenv_package = "${python}-virtualenv"
+        }
+        'Debian': {
+          if fact('lsbdistcodename') == 'trusty' {
+            $virtualenv_package = 'python-virtualenv'
+          } else {
+            $virtualenv_package = 'virtualenv'
+          }
+        }
+        'Gentoo': {
           $virtualenv_package = 'virtualenv'
-        } elsif $::lsbdistcodename == 'stretch' {
-          $virtualenv_package = 'virtualenv'
-        } elsif $::lsbdistcodename == 'xenial' {
-          $virtualenv_package = 'virtualenv'
-        } elsif $::osfamily == 'Gentoo' {
-          $virtualenv_package = 'virtualenv'
-        } else {
+        }
+        default: {
           $virtualenv_package = 'python-virtualenv'
         }
       }
